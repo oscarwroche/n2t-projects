@@ -1,32 +1,62 @@
 const uuidv1 = require("uuidv1");
-import { promises as fs } from "fs";
+import * as fs from "fs";
 
 const COMMENT_LINE_REGEX = /^\/\//;
 
-const main = async () => {
-    const { fileString, fileName } = await readVmFile();
-    const fileLines: string[] = fileString.split("\r\n");
-    const translatedFileLines = fileLines
-        .filter(and(not(isBlankLine))(not(isCommentLine)))
-        .map((line: string) => line.trim())
-        .map(translateLine);
-    await writeAsmFile(translatedFileLines.join("\r\n"), fileName);
+const main = () => {
+    const { fileStrings, inFileNames, outFileName } = readVmFiles();
+    let translatedFileLines: string[] = [];
+    for (let i = 0; i < inFileNames.length; i++) {
+        const fileLines: string[] = fileStrings[i].split("\r\n");
+        translatedFileLines = translatedFileLines.concat(
+            fileLines
+                .filter(and(not(isBlankLine))(not(isCommentLine)))
+                .map((line: string) => line.trim())
+                .map(translateLine(inFileNames[i].split(".vm")[0]))
+        );
+    }
+    writeAsmFile(translatedFileLines.join("\r\n"), outFileName);
     return "Done";
 };
 
-const readVmFile = async () => {
+const readVmFiles = () => {
     const cliArgs = process.argv.slice(2);
-    const [fileName] = cliArgs;
-    const fileString = await fs.readFile(fileName, "utf8");
-    return { fileString, fileName };
+    const [fileOrDirName] = cliArgs;
+    const stats = fs.statSync(fileOrDirName);
+    if (stats.isFile()) {
+        if (fileOrDirName.match(".vm")) {
+            const fileStrings = [fs.readFileSync(fileOrDirName, "utf8")];
+            return {
+                fileStrings,
+                inFileNames: fileOrDirName.split("/").slice(-1),
+                outFileName: `${fileOrDirName.split(".vm")[0]}.asm`,
+            };
+        } else {
+            throw new Error("File type is not .vm");
+        }
+    } else {
+        const inFileNames: string[] = [];
+        const fileStrings = fs
+            .readdirSync(fileOrDirName, "utf8")
+            .filter((fileName) => fileName.match(".vm"))
+            .map((fileName) => {
+                inFileNames.push(fileName);
+                return fs.readFileSync(fileOrDirName + fileName, "utf8");
+            });
+        const outFileName = `${fileOrDirName}${
+            fileOrDirName.split("/").slice(-2)[0]
+        }.asm`;
+        return { fileStrings, inFileNames, outFileName };
+    }
 };
 
-const writeAsmFile = async (fileString: string, inFileName: string) => {
-    const outFileName = `${inFileName.split(".")[0]}.asm`;
-    await fs.writeFile(outFileName, fileString, "utf8");
+const writeAsmFile = (fileString: string, fileName: string) => {
+    fs.writeFileSync(fileName, fileString, "utf8");
 };
 
-const translateLine: (vmLine: string) => string = (vmLine: string) => {
+const translateLine: (inFileName: string) => (vmLine: string) => string = (
+    inFileName: string
+) => (vmLine: string) => {
     let instructions = [`// ${vmLine}`];
     const splitVmLines = vmLine.split(" ");
     const command = splitVmLines[0] ? splitVmLines[0] : undefined;
@@ -42,9 +72,9 @@ const translateLine: (vmLine: string) => string = (vmLine: string) => {
         arg2 !== undefined
     ) {
         instructions = instructions.concat(
-            vmStackInstructionByMemorySegmentTranslationGenerator()[command][
-                arg1
-            ](arg2)
+            vmStackInstructionByMemorySegmentTranslationGenerator(inFileName)[
+                command
+            ][arg1](arg2)
         );
     } else {
         console.log(
@@ -126,11 +156,13 @@ const vmArithmeticInstructionTranslationsGenerator: () => {
     };
 };
 
-const vmStackInstructionByMemorySegmentTranslationGenerator: () => {
+const vmStackInstructionByMemorySegmentTranslationGenerator: (
+    inFileName: string
+) => {
     [a in keyof typeof VmStackInstruction]: {
         [a in keyof typeof VmMemorySegment]: (x: number) => string[];
     };
-} = () => {
+} = (inFileName: string) => {
     const dereferencePointer = (pointer: string | number) => [
         `@${pointer}`,
         "D=A",
@@ -172,6 +204,13 @@ const vmStackInstructionByMemorySegmentTranslationGenerator: () => {
                     .concat([`@5`, "D=D+A"])
                     .concat(["A=D", "D=M"])
                     .concat(genericPush),
+            pointer: (x: number) =>
+                dereferencePointer(x)
+                    .concat([`@3`, "D=D+A"])
+                    .concat(["A=D", "D=M"])
+                    .concat(genericPush),
+            static: (x: number) =>
+                [`@${inFileName}.${x}`, "D=M"].concat(genericPush),
         },
         pop: {
             constant: (_: number) => {
@@ -198,6 +237,19 @@ const vmStackInstructionByMemorySegmentTranslationGenerator: () => {
                 dereferencePointer(x)
                     .concat([`@5`, "D=D+A"])
                     .concat(genericPop),
+            pointer: (x: number) =>
+                dereferencePointer(x)
+                    .concat([`@3`, "D=D+A"])
+                    .concat(genericPop),
+            static: (x: number) => [
+                "@SP",
+                "A=M-1",
+                "D=M",
+                `@${inFileName}.${x}`,
+                "M=D",
+                "@SP",
+                "M=M-1",
+            ],
         },
     };
 };
@@ -216,6 +268,8 @@ enum VmMemorySegment {
     this = "this",
     that = "that",
     temp = "temp",
+    pointer = "pointer",
+    static = "static",
 }
 
 const isVmMemorySegment = isSomeEnum(VmMemorySegment);
@@ -227,4 +281,4 @@ const not = <T>(f: (x: T) => boolean) => (x: T) => !f(x);
 const and = <T>(f: (x: T) => boolean) => (g: (x: T) => boolean) => (x: T) =>
     f(x) && g(x);
 
-main().then(console.log).catch(console.log);
+main();
