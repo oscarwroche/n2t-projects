@@ -1,6 +1,6 @@
 const uuidv1 = require("uuidv1");
 
-enum VmArithmeticInstruction {
+export enum VmArithmeticInstruction {
     add = "add",
     sub = "sub",
     neg = "neg",
@@ -12,10 +12,10 @@ enum VmArithmeticInstruction {
     not = "not",
 }
 
-const isSomeEnum = <T>(e: T) => (token: any): token is T[keyof T] =>
+export const isSomeEnum = <T>(e: T) => (token: any): token is T[keyof T] =>
     Object.values(e).includes(token as T[keyof T]);
 
-const isVmArithmeticInstruction = isSomeEnum(VmArithmeticInstruction);
+export const isVmArithmeticInstruction = isSomeEnum(VmArithmeticInstruction);
 
 const utils = {
     genericPush: ["@SP", "A=M", `M=D`, "@SP", "M=M+1"],
@@ -34,7 +34,7 @@ const utils = {
     dereferencePointer: (pointer: string | number) => [`@${pointer}`, "D=A"],
 };
 
-const vmArithmeticInstructionTranslationsGenerator: () => {
+export const vmArithmeticInstructionTranslationsGenerator: () => {
     [a in keyof typeof VmArithmeticInstruction]: string[];
 } = () => {
     const identifier = uuidv1();
@@ -89,7 +89,7 @@ const vmArithmeticInstructionTranslationsGenerator: () => {
     };
 };
 
-const vmStackInstructionByMemorySegmentTranslationGenerator: (
+export const vmStackInstructionByMemorySegmentTranslationGenerator: (
     inFileName: string
 ) => {
     [a in keyof typeof VmStackInstruction]: {
@@ -188,7 +188,7 @@ const vmStackInstructionByMemorySegmentTranslationGenerator: (
     };
 };
 
-const vmProgramFlowInstructionGenerator = {
+export const vmProgramFlowInstructionGenerator = {
     goto: (labelName: string) => [`@${labelName}`, "0;JMP"],
     "if-goto": (labelName: string) => [
         "@SP",
@@ -202,19 +202,17 @@ const vmProgramFlowInstructionGenerator = {
     label: (labelName: string) => `(${labelName})`,
 };
 
-const vmFunctionInstructionGenerator = {
+export const vmFunctionInstructionGenerator = {
     call: (functionName: string, nArgs: number) => {
         const returnAddress = uuidv1();
-        return [
-            `@RETURN-ADDRESS-${returnAddress}`,
-            "@LCL",
-            "@ARG",
-            "@THIS",
-            "@THAT",
-        ]
-            .map(utils.dereferencePointer)
-            .map((chunk: string[]) => chunk.concat(utils.genericPush))
-            .flat()
+        return [`@RETURN-ADDRESS-${returnAddress}`, "D=A"]
+            .concat(utils.genericPush)
+            .concat(
+                ["LCL", "ARG", "THIS", "THAT"]
+                    .map((register: string) => [`@${register}`, "D=M"])
+                    .map((chunk: string[]) => chunk.concat(utils.genericPush))
+                    .flat()
+            )
             .concat([
                 "@SP",
                 "D=M",
@@ -229,25 +227,31 @@ const vmFunctionInstructionGenerator = {
             .concat(vmProgramFlowInstructionGenerator.goto(functionName))
             .concat(`(RETURN-ADDRESS-${returnAddress})`);
     },
-    function: (labelName: string, nVars: number) =>
-        Array(nVars)
-            .fill(utils.dereferencePointer(0).concat(utils.genericPush))
-            .flat(),
+    function: (functionName: string, nVars: number) =>
+        [`(${functionName})`].concat(
+            Array(nVars)
+                .fill(utils.dereferencePointer(0).concat(utils.genericPush))
+                .flat()
+        ),
     return: ["@LCL", "D=M", "@5", "D=D-A", "A=D", "D=M", "@14", "M=D"]
         .concat(["@ARG", "A=M", "D=A"])
         .concat(utils.genericPop)
         .concat(["@ARG", "D=M+1", "@SP", "M=D"])
-        .concat(["@14", "A=M-1", "D=M", "@THAT", "M=D"]),
+        .concat(["@LCL", "A=M-1", "D=M", "@THAT", "M=D"])
+        .concat(["@LCL", "D=M", "@2", "A=D-A", "D=M", "@THIS", "M=D"])
+        .concat(["@LCL", "D=M", "@3", "A=D-A", "D=M", "@ARG", "M=D"])
+        .concat(["@LCL", "D=M", "@4", "A=D-A", "D=M", "@LCL", "M=D"])
+        .concat(["@14", "A=M", "0;JMP"]),
 };
 
-enum VmStackInstruction {
+export enum VmStackInstruction {
     push = "push",
     pop = "pop",
 }
 
-const isVmStackInstruction = isSomeEnum(VmStackInstruction);
+export const isVmStackInstruction = isSomeEnum(VmStackInstruction);
 
-enum VmMemorySegment {
+export enum VmMemorySegment {
     constant = "constant",
     local = "local",
     argument = "argument",
@@ -258,20 +262,20 @@ enum VmMemorySegment {
     static = "static",
 }
 
-const isVmMemorySegment = isSomeEnum(VmMemorySegment);
+export const isVmMemorySegment = isSomeEnum(VmMemorySegment);
 
-enum VmProgramFlowInstruction {
+export enum VmProgramFlowInstruction {
     goto = "goto",
     ifGoto = "if-goto",
     label = "label",
 }
 
-const isVmProgramFlowInstruction = isSomeEnum(VmProgramFlowInstruction);
+export const isVmProgramFlowInstruction = isSomeEnum(VmProgramFlowInstruction);
 
-enum VmFunctionInstruction {
+export enum VmFunctionInstruction {
     call = "call",
     function = "function",
     return = "return",
 }
 
-const isVmFunctionInstruction = isSomeEnum(VmFunctionInstruction);
+export const isVmFunctionInstruction = isSomeEnum(VmFunctionInstruction);

@@ -1,10 +1,29 @@
 import * as fs from "fs";
+import {
+    isVmStackInstruction,
+    isVmFunctionInstruction,
+    isVmMemorySegment,
+    isVmProgramFlowInstruction,
+    isVmArithmeticInstruction,
+    vmArithmeticInstructionTranslationsGenerator,
+    vmProgramFlowInstructionGenerator,
+    vmFunctionInstructionGenerator,
+    vmStackInstructionByMemorySegmentTranslationGenerator,
+} from "./Generators";
 
 const COMMENT_LINE_REGEX = /^\/\//;
+
+const INFINITE_LOOP_INSTRUCTIONS = ["(WHILE)", "@WHILE", "0;JMP"];
 
 const main = () => {
     const { fileStrings, inFileNames, outFileName } = readVmFiles();
     let translatedFileLines: string[] = [];
+    console.log(inFileNames);
+    if (inFileNames.indexOf("Sys.vm") >= 0) {
+        translatedFileLines = ["@256", "D=A", "@SP", "M=D"].concat(
+            translateLine("Sys")("call Sys.init")
+        );
+    }
     for (let i = 0; i < inFileNames.length; i++) {
         const fileLines: string[] = fileStrings[i].split("\r\n");
         translatedFileLines = translatedFileLines.concat(
@@ -14,6 +33,9 @@ const main = () => {
                 .map(translateLine(inFileNames[i].split(".vm")[0]))
         );
     }
+    translatedFileLines = translatedFileLines.concat(
+        INFINITE_LOOP_INSTRUCTIONS
+    );
     writeAsmFile(translatedFileLines.join("\r\n"), outFileName);
     return "Done";
 };
@@ -61,6 +83,7 @@ const translateLine: (inFileName: string) => (vmLine: string) => string = (
     const command = splitVmLines[0] ? splitVmLines[0] : undefined;
     const arg1 = splitVmLines[1] ? splitVmLines[1] : undefined;
     const arg2 = splitVmLines[2] ? Number(splitVmLines[2]) : undefined;
+    console.log(splitVmLines);
     try {
         if (isVmArithmeticInstruction(command)) {
             instructions = instructions.concat(
@@ -83,11 +106,14 @@ const translateLine: (inFileName: string) => (vmLine: string) => string = (
         } else if (isVmFunctionInstruction(command)) {
             if (
                 (command === "call" || command === "function") &&
-                arg1 !== undefined &&
-                arg2 !== undefined
+                arg1 !== undefined
             ) {
+                console.log(arg2);
                 instructions = instructions.concat(
-                    vmFunctionInstructionGenerator[command](arg1, arg2)
+                    vmFunctionInstructionGenerator[command](
+                        arg1,
+                        arg2 ? arg2 : 0
+                    )
                 );
             } else if (command === "return") {
                 instructions = instructions.concat(
