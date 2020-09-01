@@ -68,29 +68,188 @@ type tag = {
 
 const compile = (xmlTagList: string[]) => {
     if (classKeywords.indexOf(xmlTagList[0]) >= 0) {
-        return compileClass(xmlTagList);
+        return classCompiler({ currentList: xmlTagList, currentOutput: [] });
     } else {
         throw Error("Not a class");
     }
 };
 
-const compileClass = (xmlTagList: string[]) => {
-    let output = ["<class>"];
-    let { currentList, currentOutput } = compileIdentifier({
-        currentList: xmlTagList,
-        currentOutput: output,
-    });
-};
+type Compiler = (params: {
+    currentList: string[];
+    currentOutput: string[];
+}) => { currentList: string[]; currentOutput: string[] };
 
-const compileIdentifier = (params: {
+type wordType = "keyword" | "identifier" | "symbol";
+
+const wordCompilerGenerator = (type: wordType, word?: string) => (params: {
     currentList: string[];
     currentOutput: string[];
 }) => {
-    return {
-        currentList: params.currentList.slice(0),
-        currentOutput: params.currentOutput.concat(params.currentList[0]),
+    let { currentList, currentOutput } = params;
+    const currentTagAndString = getTagAndString(currentList[0]);
+    if (
+        (!word && currentTagAndString.tag === type) ||
+        (word &&
+            currentTagAndString.tag === type &&
+            currentTagAndString.string === word)
+    ) {
+        return {
+            currentList: currentList.slice(0),
+            currentOutput: currentOutput.concat(params.currentList[0]),
+        };
+    } else {
+        throw new Error(
+            `Error : identifier is ${word}, but current list is ${currentList}`
+        );
+    }
+};
+
+const sequence = (compilers: Compiler[]): Compiler => {
+    return (params: { currentList: string[]; currentOutput: string[] }) => {
+        let { currentList, currentOutput } = params;
+        for (const compiler of compilers) {
+            ({ currentList, currentOutput } = compiler({
+                currentList,
+                currentOutput,
+            }));
+        }
+        return { currentList, currentOutput };
     };
 };
+
+const alternate = (compilers: Compiler[]): Compiler => {
+    return (params: { currentList: string[]; currentOutput: string[] }) => {
+        let { currentList, currentOutput } = params;
+        for (const compiler of compilers) {
+            try {
+                ({ currentList, currentOutput } = compiler({
+                    currentList,
+                    currentOutput,
+                }));
+                return { currentList, currentOutput };
+            } catch (e) {}
+        }
+        throw Error("None of the supplied compilers worked");
+    };
+};
+
+const star = (compiler: Compiler): Compiler => {
+    return (params: { currentList: string[]; currentOutput: string[] }) => {
+        let { currentList, currentOutput } = params;
+        try {
+            ({ currentList, currentOutput } = compiler({
+                currentList,
+                currentOutput,
+            }));
+            return star(compiler)({ currentList, currentOutput });
+        } catch (e) {
+            return { currentList, currentOutput };
+        }
+    };
+};
+
+const questionMark = (compiler: Compiler): Compiler => {
+    return (params: { currentList: string[]; currentOutput: string[] }) => {
+        let { currentList, currentOutput } = params;
+        try {
+            ({ currentList, currentOutput } = compiler({
+                currentList,
+                currentOutput,
+            }));
+            return { currentList, currentOutput };
+        } catch (e) {
+            return { currentList, currentOutput };
+        }
+    };
+};
+
+const tabLine = (line: string) => `  ${line}`;
+
+const taggedCompilerGenerator = (tag: string) => (
+    compiler: Compiler
+): Compiler => {
+    return (params: { currentList: string[]; currentOutput: string[] }) => {
+        let { currentList, currentOutput } = params;
+        ({ currentList, currentOutput } = compiler({
+            currentList,
+            currentOutput,
+        }));
+        return {
+            currentList,
+            currentOutput: [`<${tag}>`]
+                .concat(currentOutput)
+                .map(tabLine)
+                .concat(`</${tag}>`),
+        };
+    };
+};
+
+const typeCompiler = alternate([
+    wordCompilerGenerator("keyword", "int"),
+    wordCompilerGenerator("keyword", "char"),
+    wordCompilerGenerator("keyword", "boolean"),
+    wordCompilerGenerator("identifier"),
+]);
+
+const classVarDecCompiler: Compiler = taggedCompilerGenerator("classVarDec")(
+    sequence([
+        alternate([
+            wordCompilerGenerator("keyword", "static"),
+            wordCompilerGenerator("keyword", "field"),
+        ]),
+        typeCompiler,
+        star(
+            sequence([
+                wordCompilerGenerator("symbol", ","),
+                wordCompilerGenerator("identifier"),
+            ])
+        ),
+        wordCompilerGenerator("symbol", ";"),
+    ])
+);
+
+const parameterListCompiler = taggedCompilerGenerator("parameterList")(
+    questionMark(
+        sequence([
+            sequence([typeCompiler, wordCompilerGenerator("identifier")]),
+            star(
+                sequence([
+                    wordCompilerGenerator("symbol", ","),
+                    typeCompiler,
+                    wordCompilerGenerator("identifier"),
+                ])
+            ),
+        ])
+    )
+);
+
+const subroutineDecCompiler: Compiler = taggedCompilerGenerator(
+    "subroutineDec"
+)(
+    sequence([
+        alternate([
+            wordCompilerGenerator("keyword", "constructor"),
+            wordCompilerGenerator("keyword", "function"),
+            wordCompilerGenerator("keyword", "method"),
+        ]),
+        alternate(
+            [wordCompilerGenerator("keyword", "void")].concat(typeCompiler)
+        ),
+        wordCompilerGenerator("identifier"),
+        wordCompilerGenerator("symbol", "("),
+        parameterListCompiler,
+        wordCompilerGenerator("symbol", ")"),
+    ])
+);
+
+const classCompiler: Compiler = sequence([
+    wordCompilerGenerator("keyword", "class"),
+    wordCompilerGenerator("identifier"),
+    wordCompilerGenerator("symbol", "{"),
+    star(classVarDecCompiler),
+    star(subroutineDecCompiler),
+    wordCompilerGenerator("symbol", "}"),
+]);
 
 const classKeywords = ["class"];
 const classVarDecKeywords = ["static", "field"];
