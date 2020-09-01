@@ -104,6 +104,8 @@ const wordCompilerGenerator = (type: wordType, word?: string) => (params: {
     }
 };
 
+const emptyCompiler: Compiler = (x: any) => x;
+
 const sequence = (compilers: Compiler[]): Compiler => {
     return (params: { currentList: string[]; currentOutput: string[] }) => {
         let { currentList, currentOutput } = params;
@@ -236,7 +238,72 @@ const varDecCompiler = sequence([
     wordCompilerGenerator("symbol", ";"),
 ]);
 
-const statementCompiler: Compiler;
+const expressionCompiler = emptyCompiler;
+
+const letStatementCompiler = sequence([
+    wordCompilerGenerator("keyword", "let"),
+    wordCompilerGenerator("identifier"),
+    questionMark(
+        sequence([
+            wordCompilerGenerator("symbol", "["),
+            expressionCompiler,
+            wordCompilerGenerator("symbol", "]"),
+        ])
+    ),
+    wordCompilerGenerator("symbol", "="),
+    expressionCompiler,
+    wordCompilerGenerator("symbol", ";"),
+]);
+
+const ifStatementCompiler = sequence([
+    wordCompilerGenerator("keyword", "if"),
+    wordCompilerGenerator("symbol", "("),
+    expressionCompiler,
+    wordCompilerGenerator("symbol", ")"),
+    wordCompilerGenerator("symbol", "{"),
+    star(statementCompiler),
+    wordCompilerGenerator("symbol", "}"),
+    questionMark(
+        sequence([
+            wordCompilerGenerator("keyword", "else"),
+            wordCompilerGenerator("symbol", "{"),
+            star(statementCompiler),
+            wordCompilerGenerator("symbol", "}"),
+        ])
+    ),
+]);
+
+const whileStatementCompiler = sequence([
+    wordCompilerGenerator("keyword", "while"),
+    wordCompilerGenerator("symbol", "("),
+    expressionCompiler,
+    wordCompilerGenerator("symbol", ")"),
+    wordCompilerGenerator("symbol", "{"),
+    star(statementCompiler),
+    wordCompilerGenerator("symbol", "}"),
+]);
+
+const subroutineCallCompiler = emptyCompiler;
+
+const doStatementCompiler = sequence([
+    wordCompilerGenerator("keyword", "do"),
+    subroutineCallCompiler,
+    wordCompilerGenerator("symbol", ";"),
+]);
+
+const returnStatementCompiler = sequence([
+    wordCompilerGenerator("keyword", "return"),
+    questionMark(expressionCompiler),
+    wordCompilerGenerator("symbol", ";"),
+]);
+
+const statementCompiler = alternate([
+    letStatementCompiler,
+    ifStatementCompiler,
+    whileStatementCompiler,
+    doStatementCompiler,
+    returnStatementCompiler,
+]);
 
 const subroutineBodyCompiler = taggedCompilerGenerator("subroutineBody")(
     sequence([
