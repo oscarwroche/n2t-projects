@@ -222,6 +222,30 @@ const parameterListCompiler = taggedCompilerGenerator("parameterList")(
         ])
     )
 );
+const varDecCompiler = sequence([
+    wordCompilerGenerator("keyword", "var"),
+    typeCompiler,
+    wordCompilerGenerator("identifier"),
+    star(
+        sequence([
+            wordCompilerGenerator("symbol", ","),
+            typeCompiler,
+            wordCompilerGenerator("identifier"),
+        ])
+    ),
+    wordCompilerGenerator("symbol", ";"),
+]);
+
+const statementCompiler: Compiler;
+
+const subroutineBodyCompiler = taggedCompilerGenerator("subroutineBody")(
+    sequence([
+        wordCompilerGenerator("symbol", "{"),
+        star(varDecCompiler),
+        star(statementCompiler),
+        wordCompilerGenerator("symbol", "}"),
+    ])
+);
 
 const subroutineDecCompiler: Compiler = taggedCompilerGenerator(
     "subroutineDec"
@@ -239,6 +263,7 @@ const subroutineDecCompiler: Compiler = taggedCompilerGenerator(
         wordCompilerGenerator("symbol", "("),
         parameterListCompiler,
         wordCompilerGenerator("symbol", ")"),
+        subroutineBodyCompiler,
     ])
 );
 
