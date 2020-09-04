@@ -98,6 +98,17 @@ const SYMBOL_TOKENS = [
     "~",
 ];
 
+const xmlSymbolsMap = {
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "&": "&amp;",
+};
+
+function isXmlSymbol(value: string): value is keyof typeof xmlSymbolsMap {
+    return value in xmlSymbolsMap;
+}
+
 const escapeSpecialChars = (input: string) => `\\${input}`;
 
 const tokenRegexes = {
@@ -126,7 +137,11 @@ const tokenizeString = (fileString: string): string[] => {
                         fileString.slice(match[0].length)
                     );
                     return [
-                        `<${tokenRegexName}> ${match[0]} </${tokenRegexName}>`,
+                        `<${tokenRegexName}> ${
+                            isXmlSymbol(match[0])
+                                ? xmlSymbolsMap[match[0]]
+                                : match[0]
+                        } </${tokenRegexName}>`,
                     ].concat(tokenizeString(newFileString));
                 }
             }
