@@ -2,13 +2,17 @@ import * as fs from "fs";
 
 const main = () => {
     const fileStringsByFileNames = readJackFiles();
-    let translatedFileLines: string[] = [];
     for (const fileName in fileStringsByFileNames) {
         const outFileName = `${fileName.split(".").slice(0, -1)[0]}-TEST.xml`;
-        const processedFileString = fileStringsByFileNames[fileName]
-            .split("\r\n")
+        let splitFileString = fileStringsByFileNames[fileName].split("\r\n");
+        if (splitFileString.length === 1) {
+            splitFileString = fileStringsByFileNames[fileName].split("\n");
+        }
+        let processedFileString = splitFileString
             .filter((line) => !isCommentLine(line) && !isBlankLine(line))
-            .join("");
+            .map((line) => line.replace(COMMENT_REGEX, ""))
+            .join("")
+            .replace(/\/\*\*.+?\*\//g, "");
         const tokenizedLines = [TOKENS_STARTING_TAG]
             .concat(tokenizeString(processedFileString))
             .concat([TOKENS_ENDING_TAG]);
@@ -96,6 +100,7 @@ const SYMBOL_TOKENS = [
     ">",
     "=",
     "~",
+    "|",
 ];
 
 const xmlSymbolsMap = {
@@ -106,7 +111,7 @@ const xmlSymbolsMap = {
 };
 
 function isXmlSymbol(value: string): value is keyof typeof xmlSymbolsMap {
-    return value in xmlSymbolsMap;
+    return xmlSymbolsMap.hasOwnProperty(value);
 }
 
 const escapeSpecialChars = (input: string) => `\\${input}`;
@@ -118,7 +123,7 @@ const tokenRegexes = {
         "i"
     ),
     identifier: /^([A-Za-z_](?:[A-Za-z0-9_])*)/,
-    integerConstant: /^([0-32767])/,
+    integerConstant: /^([0-9]+)/,
     stringConstant: /(\".+?\")/,
 };
 
@@ -136,11 +141,12 @@ const tokenizeString = (fileString: string): string[] => {
                     let newFileString = removeWhiteSpace(
                         fileString.slice(match[0].length)
                     );
+                    console.log(match[0]);
                     return [
                         `<${tokenRegexName}> ${
                             isXmlSymbol(match[0])
                                 ? xmlSymbolsMap[match[0]]
-                                : match[0]
+                                : `${match[0]}`
                         } </${tokenRegexName}>`,
                     ].concat(tokenizeString(newFileString));
                 }
@@ -163,7 +169,8 @@ const removeWhiteSpace = (input: string): string => {
     return "";
 };
 
-const COMMENT_LINE_REGEX = /(?:^\/\/)|(?:^\/\*)/;
+const COMMENT_LINE_REGEX = /^\s*?(?:\/\/)|(?:\/\*)[^\*]+/;
+const COMMENT_REGEX = /\/\/.+/;
 
 const isCommentLine = (line: string) => !!line.match(COMMENT_LINE_REGEX);
 const isBlankLine = (line: string) => !!line.match(/^\s+$/);
