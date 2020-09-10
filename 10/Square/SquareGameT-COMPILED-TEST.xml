@@ -5,13 +5,13 @@
   <classVarDec>
     <keyword> field </keyword>
     <identifier> Square </identifier>
-    <identifier> square </identifier>
+    <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"defined"}> square </identifier>
     <symbol> ; </symbol>
   </classVarDec>
   <classVarDec>
     <keyword> field </keyword>
     <keyword> int </keyword>
-    <identifier> direction </identifier>
+    <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"defined"}> direction </identifier>
     <symbol> ; </symbol>
   </classVarDec>
   <subroutineDec>
@@ -27,7 +27,7 @@
       <statements>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> square </identifier>
+          <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
@@ -61,7 +61,7 @@
         </letStatement>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> direction </identifier>
+          <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
@@ -96,7 +96,7 @@
       <statements>
         <doStatement>
           <keyword> do </keyword>
-          <identifier> square </identifier>
+          <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
           <symbol> . </symbol>
           <identifier> dispose </identifier>
           <symbol> ( </symbol>
@@ -145,7 +145,7 @@
           <symbol> ( </symbol>
           <expression>
             <term>
-              <identifier> direction </identifier>
+              <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
             </term>
             <symbol> = </symbol>
             <term>
@@ -157,7 +157,7 @@
           <statements>
             <doStatement>
               <keyword> do </keyword>
-              <identifier> square </identifier>
+              <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
               <symbol> . </symbol>
               <identifier> moveUp </identifier>
               <symbol> ( </symbol>
@@ -174,7 +174,7 @@
           <symbol> ( </symbol>
           <expression>
             <term>
-              <identifier> direction </identifier>
+              <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
             </term>
             <symbol> = </symbol>
             <term>
@@ -186,7 +186,7 @@
           <statements>
             <doStatement>
               <keyword> do </keyword>
-              <identifier> square </identifier>
+              <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
               <symbol> . </symbol>
               <identifier> moveDown </identifier>
               <symbol> ( </symbol>
@@ -203,7 +203,7 @@
           <symbol> ( </symbol>
           <expression>
             <term>
-              <identifier> direction </identifier>
+              <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
             </term>
             <symbol> = </symbol>
             <term>
@@ -215,7 +215,7 @@
           <statements>
             <doStatement>
               <keyword> do </keyword>
-              <identifier> square </identifier>
+              <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
               <symbol> . </symbol>
               <identifier> moveLeft </identifier>
               <symbol> ( </symbol>
@@ -232,7 +232,7 @@
           <symbol> ( </symbol>
           <expression>
             <term>
-              <identifier> direction </identifier>
+              <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
             </term>
             <symbol> = </symbol>
             <term>
@@ -244,7 +244,7 @@
           <statements>
             <doStatement>
               <keyword> do </keyword>
-              <identifier> square </identifier>
+              <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
               <symbol> . </symbol>
               <identifier> moveRight </identifier>
               <symbol> ( </symbol>
@@ -293,19 +293,19 @@
       <varDec>
         <keyword> var </keyword>
         <keyword> char </keyword>
-        <identifier> key </identifier>
+        <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"defined"}> key </identifier>
         <symbol> ; </symbol>
       </varDec>
       <varDec>
         <keyword> var </keyword>
         <keyword> boolean </keyword>
-        <identifier> exit </identifier>
+        <identifier {"type":"boolean","kind":"var","count":1,"usedOrDefined":"defined"}> exit </identifier>
         <symbol> ; </symbol>
       </varDec>
       <statements>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> exit </identifier>
+          <identifier {"type":"boolean","kind":"var","count":1,"usedOrDefined":"used"}> exit </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
@@ -321,7 +321,7 @@
             <term>
               <symbol> ~ </symbol>
               <term>
-                <identifier> exit </identifier>
+                <identifier {"type":"boolean","kind":"var","count":1,"usedOrDefined":"used"}> exit </identifier>
               </term>
             </term>
           </expression>
@@ -333,7 +333,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -345,7 +345,7 @@
               <statements>
                 <letStatement>
                   <keyword> let </keyword>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                   <symbol> = </symbol>
                   <expression>
                     <term>
@@ -377,7 +377,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -389,7 +389,7 @@
               <statements>
                 <letStatement>
                   <keyword> let </keyword>
-                  <identifier> exit </identifier>
+                  <identifier {"type":"boolean","kind":"var","count":1,"usedOrDefined":"used"}> exit </identifier>
                   <symbol> = </symbol>
                   <expression>
                     <term>
@@ -406,7 +406,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -418,7 +418,7 @@
               <statements>
                 <doStatement>
                   <keyword> do </keyword>
-                  <identifier> square </identifier>
+                  <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
                   <symbol> . </symbol>
                   <identifier> decSize </identifier>
                   <symbol> ( </symbol>
@@ -435,7 +435,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -447,7 +447,7 @@
               <statements>
                 <doStatement>
                   <keyword> do </keyword>
-                  <identifier> square </identifier>
+                  <identifier {"type":"Square","kind":"field","count":0,"usedOrDefined":"used"}> square </identifier>
                   <symbol> . </symbol>
                   <identifier> incSize </identifier>
                   <symbol> ( </symbol>
@@ -464,7 +464,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -476,7 +476,7 @@
               <statements>
                 <letStatement>
                   <keyword> let </keyword>
-                  <identifier> direction </identifier>
+                  <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
                   <symbol> = </symbol>
                   <expression>
                     <term>
@@ -493,7 +493,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -505,7 +505,7 @@
               <statements>
                 <letStatement>
                   <keyword> let </keyword>
-                  <identifier> direction </identifier>
+                  <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
                   <symbol> = </symbol>
                   <expression>
                     <term>
@@ -522,7 +522,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -534,7 +534,7 @@
               <statements>
                 <letStatement>
                   <keyword> let </keyword>
-                  <identifier> direction </identifier>
+                  <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
                   <symbol> = </symbol>
                   <expression>
                     <term>
@@ -551,7 +551,7 @@
               <symbol> ( </symbol>
               <expression>
                 <term>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                 </term>
                 <symbol> = </symbol>
                 <term>
@@ -563,7 +563,7 @@
               <statements>
                 <letStatement>
                   <keyword> let </keyword>
-                  <identifier> direction </identifier>
+                  <identifier {"type":"int","kind":"field","count":1,"usedOrDefined":"used"}> direction </identifier>
                   <symbol> = </symbol>
                   <expression>
                     <term>
@@ -585,7 +585,7 @@
                     <symbol> ( </symbol>
                     <expression>
                       <term>
-                        <identifier> key </identifier>
+                        <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                       </term>
                       <symbol> = </symbol>
                       <term>
@@ -601,7 +601,7 @@
               <statements>
                 <letStatement>
                   <keyword> let </keyword>
-                  <identifier> key </identifier>
+                  <identifier {"type":"char","kind":"var","count":0,"usedOrDefined":"used"}> key </identifier>
                   <symbol> = </symbol>
                   <expression>
                     <term>

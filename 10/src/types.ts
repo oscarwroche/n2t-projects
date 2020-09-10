@@ -23,9 +23,15 @@ export type SymbolTables = {
 };
 
 export type SymbolTable<K> = {
-    [identifier: string]: {
-        kind: K;
-        type: string;
-        count: number;
-    };
+    [identifier: string]: SymbolInfo<K>;
 };
+
+export type SymbolInfo<K> = {
+    kind: K;
+    type: string;
+    count: number;
+};
+
+export interface AdditionalTagInformation<K> extends SymbolInfo<K> {
+    usedOrDefined: "used" | "defined";
+}

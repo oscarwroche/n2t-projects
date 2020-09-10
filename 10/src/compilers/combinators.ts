@@ -58,7 +58,13 @@ export function alternate(compilers: Compiler[]): Compiler {
                     symbolTables,
                     latestType,
                 }));
-                return { currentList, currentOutput, tabSpace, symbolTables };
+                return {
+                    currentList,
+                    currentOutput,
+                    tabSpace,
+                    symbolTables,
+                    latestType,
+                };
             } catch (e) {}
         }
         throw Error("None of the supplied compilers worked");

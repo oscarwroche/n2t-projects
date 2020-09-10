@@ -1,4 +1,9 @@
-import { CompilerInput, Compiler, wordType } from "../types";
+import {
+    CompilerInput,
+    Compiler,
+    wordType,
+    AdditionalTagInformation,
+} from "../types";
 import { getTagAndString } from "./utils";
 import { alternate, sequence, star, questionMark } from "./combinators";
 
@@ -45,9 +50,7 @@ function wordCompilerGenerator(
     kind?: "static" | "field" | "argument" | "var",
     rememberType?: boolean
 ) {
-    return debug(
-        `wordCompiler - type : ${type} - word: ${word} - kind : ${kind} - rememberType: ${rememberType}`
-    )((params: CompilerInput) => {
+    return debug(`rememberType: ${rememberType}`)((params: CompilerInput) => {
         let {
             currentList,
             currentOutput,
@@ -55,9 +58,6 @@ function wordCompilerGenerator(
             symbolTables,
             latestType,
         } = params;
-        if (rememberType === true) {
-            console.log("ALERT");
-        }
         const currentTagAndString = getTagAndString(currentList[0]);
         if (
             (!word && currentTagAndString.tag === type) ||
@@ -65,14 +65,14 @@ function wordCompilerGenerator(
                 currentTagAndString.tag === type &&
                 currentTagAndString.string === word)
         ) {
+            let newOutput = `${tabSpace}${currentList[0]}`;
             if (type === "identifier") {
                 if (symbolTables && latestType) {
                     if (
                         symbolTables.subRoutine &&
-                        (kind === "argument" || kind === "var") &&
-                        !symbolTables.subRoutine[currentTagAndString.string]
+                        (kind === "argument" || kind === "var")
                     ) {
-                        symbolTables.subRoutine[currentTagAndString.string] = {
+                        const newSymbolObject = {
                             type: latestType,
                             kind,
                             count: Object.values(
@@ -80,28 +80,57 @@ function wordCompilerGenerator(
                             ).filter((symbolValue) => symbolValue.kind === kind)
                                 .length,
                         };
-                        console.log(symbolTables);
+                        symbolTables.subRoutine[
+                            currentTagAndString.string
+                        ] = newSymbolObject;
+                        newOutput = addValuesToTag(newOutput, {
+                            ...symbolTables.subRoutine[
+                                currentTagAndString.string
+                            ],
+                            usedOrDefined: "defined",
+                        });
                     } else if (
                         symbolTables.class &&
-                        (kind === "static" || kind === "field") &&
-                        !symbolTables.class[currentTagAndString.string]
+                        (kind === "static" || kind === "field")
                     ) {
-                        symbolTables.class[currentTagAndString.string] = {
+                        const newSymbolObject = {
                             type: latestType,
                             kind,
                             count: Object.values(symbolTables.class).filter(
                                 (symbolValue) => symbolValue.kind === kind
                             ).length,
                         };
-                        console.log(symbolTables);
+                        symbolTables.class[
+                            currentTagAndString.string
+                        ] = newSymbolObject;
+                        newOutput = addValuesToTag(newOutput, {
+                            ...symbolTables.class[currentTagAndString.string],
+                            usedOrDefined: "defined",
+                        });
                     }
+                } else if (
+                    symbolTables &&
+                    symbolTables.subRoutine &&
+                    symbolTables.subRoutine[currentTagAndString.string]
+                ) {
+                    newOutput = addValuesToTag(newOutput, {
+                        ...symbolTables.subRoutine[currentTagAndString.string],
+                        usedOrDefined: "used",
+                    });
+                } else if (
+                    symbolTables &&
+                    symbolTables.class &&
+                    symbolTables.class[currentTagAndString.string]
+                ) {
+                    newOutput = addValuesToTag(newOutput, {
+                        ...symbolTables.class[currentTagAndString.string],
+                        usedOrDefined: "used",
+                    });
                 }
             }
             return {
                 currentList: currentList.slice(1),
-                currentOutput: currentOutput.concat(
-                    `${tabSpace}${currentList[0]}`
-                ),
+                currentOutput: currentOutput.concat(newOutput),
                 tabSpace,
                 symbolTables,
                 latestType: rememberType
@@ -118,7 +147,6 @@ function wordCompilerGenerator(
 
 function debugCompilerGenerator(debugString: string) {
     return function (params: CompilerInput) {
-        console.log("DEBUG :", debugString);
         let {
             currentList,
             currentOutput,
@@ -126,7 +154,7 @@ function debugCompilerGenerator(debugString: string) {
             symbolTables,
             latestType,
         } = params;
-        console.log("DEBUG : next item in list is ", currentList[0]);
+        console.log("DEBUG : symbolTables", symbolTables);
         return {
             currentList,
             currentOutput,
@@ -135,6 +163,13 @@ function debugCompilerGenerator(debugString: string) {
             latestType,
         };
     };
+}
+
+function addValuesToTag<K>(tag: string, object: AdditionalTagInformation<K>) {
+    return tag.replace(
+        "<identifier>",
+        `<identifier ${JSON.stringify(object)}>`
+    );
 }
 
 function unaryOpCompiler(params: CompilerInput) {
